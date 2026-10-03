@@ -131,36 +131,59 @@ made of, and what you would put in code — not in the prompt — if a wrong
 ### Tokens per call
 
 | Call | A — never compressed | B — compressed at the `compress` turn |
-|---|---|---|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
-| 6 | | |
-| 7 | | |
-| 8 | | |
-| 9 | | |
-| 10 | | |
-| 11 | | |
-| 12 | | |
-| **peak** | | |
-| **total for the run** | | |
+|---|----------------------|---------------------------------------|
+| 1 | 63                   | 63                                    |
+| 2 | 128                  | 118                                   |
+| 3 | 201                  | 193                                   |
+| 4 | 279                  | 279                                   |
+| 5 | 355                  | 349                                   |
+| 6 | 460                  | 467                                   |
+| 7 | 553                  | 553                                   |
+| 8 | 649                  | 665                                   |
+| 9 | 736                  | 749                                   |
+| 10 | 822                  | 1358                                  |
+| 11 | 944                  | 267                                   |
+| 12 | -                    | 373                                   |
+| **peak** | 944                  | 1358                                  |
+| **total for the run** | 5190                 | 5434                                  |
 
 ### Probes after the conversation
 
-| Probe | Tests | A retrieved? | A answer | B retrieved? | B answer |
-|---|---|---|---|---|---|
-| Q-1 identity | turn 1 | | | | |
-| Q-2 missing document | turn 5 | | | | |
-| Q-3 band and amount | turns 3–4 | | | | |
-| Q-4 the constraint | turn 6 | | | | |
-| Q-5 the open question | turn 7 | | | | |
-| **retrieved** | | /5 | | /5 | |
+| Probe                 | Tests     | A retrieved? | A answer                                                                                                                                                                                                                                                                                | B retrieved? | B answer                                                                                                                                                       |
+|-----------------------|-----------|--------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Q-1 identity          | turn 1    | Yes          | You are Daniyar Qoshan, applicant **A-202**.                                                                                                                                                                                                                                            | Yes          | You are **Daniyar Qoshan**, and your applicant ID is **A-202**.                                                                                                |
+| Q-2 missing document  | turn 5    | Yes          | The only document you have explicitly said is missing is your **ID card**. You said you plan to bring it to the office on Thursday. The status of your transcript, family income certificate, and employer letter is not confirmed.                                                     | Yes          | The missing document is a copy or scan of your ID card                                                                                                         |
+| Q-3 band and amount   | turns 3–4 | No           | Your income band is **2**, based on your family’s certificate. However, the grant amount associated with band 2 has not been provided, so I can’t calculate or confirm the payment. Please ask the grant office for the applicable amount.                                              | No           | Your family’s certificate places you in **income band 2**. The corresponding grant amount is not provided in the available information, so I can’t confirm it. |
+| Q-4 the constraint    | turn 6    | Yes          | You said you can come to the office on **Thursdays**, since you have lab all week otherwise                                                                                                                                                                                             | Yes          | You can come to the office on **Thursdays**.                                                                                                                   |
+| Q-5 the open question | turn 7    | Yes          | You asked whether a **scanned letter from your employer** would be accepted, or whether you must provide the **original**. I said I didn’t have the grant office’s document-submission policy and recommended asking whether they accept a scan, clear photo, or digitally signed copy. | Yes          | You asked whether a scanned letter from your employer would count, or whether the original letter is required.                                                 |
+| **retrieved**         |           | 4/5          |                                                                                                                                                                                                                                                                                         | 4/5          |                                                                                                                                                                |
 
 ### The state my compression produced
 
 ```json
+{
+  "applicant_id": "A-202",
+  "topic": "Study grant application and document submission",
+  "facts": [
+    "Applicant's name is Daniyar Qoshan.",
+    "Applicant sent a transcript last week.",
+    "Applicant's family's certificate places them in income band 2.",
+    "Applicant could not upload their ID card because their home scanner broke.",
+    "Applicant's sister, Aruzhan, applied last year and is on file."
+  ],
+  "decisions": [],
+  "constraints": [
+    "Applicant can come to the office only on Thursdays because they have lab all week otherwise."
+  ],
+  "open_questions": [
+    "Does the applicant qualify for the study grant?",
+    "How much would the grant award be if approved?",
+    "Does a scanned letter from the applicant's employer count, or is the original required?",
+    "If the applicant brings the ID card on Thursday, will the decision be made the same day?",
+    "Does the sister's previous application affect the applicant's eligibility or award?"
+  ],
+  "language": "English with some Kazakh"
+}
 ```
 
 ### Written answers
@@ -168,24 +191,37 @@ made of, and what you would put in code — not in the prompt — if a wrong
 **1. What did compression buy?** Peak tokens both ways, probes retrieved both
 ways, and — if a probe was lost — which one and which turn it came from.
 
->
+>Peak in uncompressed version is 944 tokens and 1358 in compressed version, it was moment when we compressed history.
+>But after compression my calls take a fewer tokens, for example, in uncompressed version it was 944 tokens and in compressed
+>version it was 267 tokens. Different was 677 tokens (it can depend on model, because some answers in first model may be a biggest,
+> bit we can compare it how example)
+
+>Each model retrieved 4 of 5 probes. They lost question with count of grant, it was Q-3.   
 
 **2. Why must the state be structured rather than a paragraph?** You could have
 asked for "a summary". Say what changes when the summary is an object with
 named fields.
 
->
+>Structure data it some easier for model, because it save the most important moment and find it faster 
+>that unstructured data, for example, paragraph or some text
 
 **3. What is missing from your state that you would add?** Name what you would
 add and what you would drop to pay for it.
 
->
+>The most important add fields for amount, that model save it and show after. I want drop field with decision,
+> because model doesn't add some information in this place.
 
 **4. When is compression the wrong choice?** Name a conversation where it would
 lose something that cannot be recovered, and say whether your program would
 notice.
 
->
+>Compression is a bad idea for topics with a lot of important information, some numbers,
+> name and another. Summery can drop a really necessary details. For example, my program doesn't remember info 
+> with count of grant. 
+
+> And the wrong idea using compression is a small conversation after compression. If looked on my result, compressed program cost 
+> more expensive than uncompressed. It was because function "compressed" cost a lot of tokens, because we send history, some description 
+> and JSON structure. 
 
 ---
 

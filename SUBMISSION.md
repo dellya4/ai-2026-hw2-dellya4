@@ -1,8 +1,11 @@
 # HW2 submission
 
 **Name: Abdrakhmanova Adel**
+
 **Student ID: S23067852**
+
 **Group: CSS4007-ENG-10**
+
 **Repository:** https://github.com/dellya4/ai-2026-hw2-dellya4
 
 ## AI tool disclosure
@@ -229,14 +232,14 @@ notice.
 
 ### Part 1 — extraction
 
-| Story | Parsed? | Valid? | Fields that came back `null` | Traps hit |
-|---|---|---|---|---|
-| story-01 | | | | |
-| story-02 | | | | |
-| story-03 | | | | |
-| story-04 | | | | |
-| story-05 | | | | |
-| story-06 | | | | |
+| Story    | Parsed? | Valid? | Fields that came back `null`                                   | Traps hit                                                          |
+|----------|---------|--------|----------------------------------------------------------------|--------------------------------------------------------------------|
+| story-01 | Yes     | Yes    | -                                                              | No                                                                 |
+| story-02 | Yes     | Yes    | graduation_year, gpa_original, gpa_original_scale, gpa_4_scale | Contradiction (the graduation isn't numerical), missing data (GPA) |
+| story-03 | Yes     | Yes    | -                                                              | GPA scale is 5, a second paper is under review                     |
+| story-04 | Yes     | Yes    | -                                                              | 1 published book, 1 under review and 2 in preparation              |
+| story-05 | Yes     | Yes    | -                                                              | CV in kazakh language                                              |
+| story-06 | Yes     | Yes    | graduation_year, gpa_original, gpa_original_scale, gpa_4_scale | Contradiction (graduation and GPA)                                 |
 
 The four traps, for reference: no GPA stated · a GPA on another scale · a paper
 that is not published · a story that contradicts itself.
@@ -244,24 +247,78 @@ that is not published · a story that contradicts itself.
 Paste the extraction for **story-06**, the one that contradicts itself:
 
 ```json
+
+{
+  "candidate_id": "story-06",
+  "full_name": "Nurzhan Abilov",
+  "degree": "BSc in Statistics",
+  "graduation_year": null,
+  "gpa_original": null,
+  "gpa_original_scale": null,
+  "gpa_4_scale": null,
+  "languages": [
+    "Kazakh",
+    "Russian",
+    "English"
+  ],
+  "published_peer_reviewed_outputs": 1,
+  "other_research_outputs": [
+    "One poster at a local event"
+  ],
+  "relevant_experience_months": 40,
+  "contradictions": [
+    {
+      "field": "gpa",
+      "values": [
+        "3.2",
+        "3.5"
+      ],
+      "note": "The story gives both values and explicitly states the GPA is not cleanly known."
+    },
+    {
+      "field": "graduation_year",
+      "values": [
+        "2024",
+        "2026"
+      ],
+      "note": "The story says the candidate graduated in 2024 and is currently a final-year student graduating in 2026."
+    }
+  ],
+  "evidence": {
+    "full_name": "\"# Nurzhan Abilov\"",
+    "degree": "\"I graduated in 2024 with a BSc in Statistics.\"",
+    "graduation_year": null,
+    "gpa": null,
+    "language": [
+      "\"Languages: Kazakh, Russian, English.\""
+    ],
+    "published_peer_reviewed_output": [
+      "\"one paper published, in a peer-reviewed proceedings, on survey weighting.\""
+    ],
+    "relevant_experience_months": [
+      "\"I have been at an insurance analytics team since February 2023, which is about forty months.\""
+    ]
+  }
+}
+
 ```
 
 ### Part 2 — scores and the winner
 
 | Candidate | academic (0–5) | research (0–5) | experience (0–5) | weighted total (code) |
-|---|---|---|---|---|
-| story-01 | | | | |
-| story-02 | | | | |
-| story-03 | | | | |
-| story-04 | | | | |
-| story-05 | | | | |
-| story-06 | | | | |
+|---|----------------|----------------|------------------|-----------------------|
+| story-01 | 5              | 5              | 2                | 4.40                  |
+| story-02 | 0              | 2.5            | 5                | 1.75                  |
+| story-03 | 4              | 2.5            | 2.92             | 3.33                  |
+| story-04 | 4              | 3              | 5                | 3.90                  |
+| story-05 | 5              | 2.5            | 1.25             | 3.50                  |
+| story-06 | 2              | 3              | 5                | 2.90                  |
 
-**Winner, computed by my code:**
+**Winner, computed by my code:** story-01 total=4.40
 
 **The model's prose answer, asked separately ("who should win?"):**
 
->
+> **Candidate ID: story-01 — Aziza Bekova. Aziza has a strong 3.8/4.0 GPA, two published peer-reviewed outputs, and eight months of relevant experience. Although some candidates have more experience, her superior academic record and two publications give her the strongest weighted profile overall.**
 ```
 
 ### Part 3 — written answers
@@ -269,30 +326,44 @@ Paste the extraction for **story-06**, the one that contradicts itself:
 **1. Which rule did you have to add, and what broke without it?** Name the
 story that forced it.
 
->
+>The most important rule was - "If the story contains contradictory value for a fields,
+    don't choose one and don't average them
+    Return null for that field and record the contradiction". This criteria goos work in 6 story, when 
+    person said different years and GPA.
 
 **2. Where did the model guess, and where did your code have to decide?** One
 example of each, from your run.
 
->
+>The model rated according to criteria, so there could be an interpretation of it. For example, for story-06, 
+>with a contradictory GPA, the model still set academic = 2.
+>The code, in turn, didn't interpret the candidates, but calculated the final score using a formula from rubric. 
+>For example, for story-01, the code calculated a weighted total of 4.40 and selected this candidate as the winner based on the final scores.
 
 **3. Did your prose ranking and your computed ranking agree?** Say which one
 you trust and why — and if they agreed, what you would need to see before
 trusting the prose one alone.
 
->
+>Yes, the results matched. Both my code and the model's separate prose response chose story-01 as the winner.
+>I trust the ranking calculated by the code more because it uses an explicit formula and the result can be verified. 
+>To trust only the prose response of the model, it would be better to see transparent ratings for each criterion and 
+>confirmation that the model is neutral to all candidates.
 
 **4. The rubric has no anchor for a contradicted field.** The stories say 3.2
 and then 3.5; the rubric defines a 0 and a 5 and nothing in between for this
 case. Say what you did and what the rule should be.
 
->
+>The GPA fields for story-06 were set to null, and the contradiction itself was saved in contradictions.
+>When scoring, the model still gave the candidate academic = 2, because rubric does not define the exact behavior for such a case. 
+>The best outcome is if rubric requires you to send conflicting academic data for manual verification, 
+>since a person could either get confused or deliberately lie.
 
 **5. How close were your top two candidates?** If they were within 0.05, say
 what you would tell the committee and what you would change in the extraction
 to make that call defensible.
 
->
+>story-01 — 4.40
+>story-04 — 3.90
+>The difference was 0.50, so the candidate's victory is fully justified and logical.
 
 ---
 

@@ -367,27 +367,53 @@ def interactive():
     ]
 
     last_tokens = 0
+    total_tokens = 0
 
     while True:
         user_text = input("\nYou: ").strip()
+
+        if not user_text:
+            continue
 
         if user_text.lower() in {
             "exit",
             "quit"
         }:
+            print(
+                f"\nTotal input tokens used: "
+                f"{total_tokens}"
+            )
             break
 
         if user_text.lower() == "tokens":
             print(
-                f"Last input tokens: {last_tokens}"
+                f"Last input tokens: "
+                f"{last_tokens}"
             )
+
+            print(
+                f"Total input tokens: "
+                f"{total_tokens}"
+            )
+
             continue
 
-        if user_text.lower() == "compress":
+        if user_text.lower() in {
+            "compress",
+            "<compress>"
+        }:
             compressed = compress_history(
                 messages,
                 schema
             )
+
+            compression_tokens = compressed.get(
+                "input_tokens",
+                0
+            )
+
+            last_tokens = compression_tokens
+            total_tokens += compression_tokens
 
             if compressed["ok"]:
                 state = compressed["state"]
@@ -409,13 +435,37 @@ def interactive():
                     }
                 ]
 
-                print("Compression successful.")
-                print(state)
+                print(
+                    "\nCompression successful."
+                )
+
+                print(
+                    json.dumps(
+                        state,
+                        ensure_ascii=False,
+                        indent=2
+                    )
+                )
+
+                print(
+                    f"\nCompression input tokens: "
+                    f"{compression_tokens}"
+                )
+
+                print(
+                    f"Total input tokens: "
+                    f"{total_tokens}"
+                )
 
             else:
                 print(
                     "Compression failed. "
                     "History was kept."
+                )
+
+                print(
+                    f"Compression input tokens: "
+                    f"{compression_tokens}"
                 )
 
             continue
@@ -428,10 +478,21 @@ def interactive():
         result = ask_llm(messages)
 
         last_tokens = result["input_tokens"]
+        total_tokens += last_tokens
 
         print(
             "\nAssistant:",
             result["text"]
+        )
+
+        print(
+            f"\nInput tokens this call: "
+            f"{last_tokens}"
+        )
+
+        print(
+            f"Total input tokens: "
+            f"{total_tokens}"
         )
 
         messages.append({
